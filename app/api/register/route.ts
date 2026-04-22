@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/src/lib/prisma";
 import { registerSchema } from "@/src/lib/validations";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("REGISTER_BODY:", body);
 
     const parsed = registerSchema.safeParse(body);
 
@@ -43,8 +42,6 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("REGISTER_SUCCESS:", user);
-
     return NextResponse.json(
       {
         message: "User created successfully",
@@ -58,10 +55,11 @@ export async function POST(req: Request) {
     );
   } catch (error) {
     console.error("REGISTER_ERROR:", error);
+
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: String(error),
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

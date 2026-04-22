@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/src/lib/prisma";
 import { loginSchema } from "@/src/lib/validations";
 
@@ -57,15 +57,18 @@ export async function POST(req: Request) {
       httpOnly: true,
       path: "/",
       maxAge: 60 * 60 * 24,
+      sameSite: "lax",
+      secure: true,
     });
 
     return response;
   } catch (error) {
     console.error("LOGIN_ERROR:", error);
+
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: String(error),
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

@@ -11,7 +11,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "lucide-react": "^0.511.0",
     "next": "16.2.4",
     "pg": "^8.16.3",
@@ -23,7 +23,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

@@ -21,6 +21,11 @@ button {
   font: inherit;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
 html.dark {
   color-scheme: dark;
 }
