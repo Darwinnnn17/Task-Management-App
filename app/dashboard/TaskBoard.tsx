@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Task } from "@prisma/client";
 import { toast } from "sonner";
 import {
   CheckCircle2,
@@ -22,9 +21,21 @@ import {
   X,
 } from "lucide-react";
 
+type TaskItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: "TODO" | "IN_PROGRESS" | "DONE";
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  dueDate: string | Date | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  userId: string;
+};
+
 type TaskBoardProps = {
   userName: string;
-  initialTasks: Task[];
+  initialTasks: TaskItem[];
 };
 
 type TaskFormState = {
@@ -43,7 +54,7 @@ const defaultForm: TaskFormState = {
   dueDate: "",
 };
 
-function getStatusClasses(status: Task["status"]) {
+function getStatusClasses(status: TaskItem["status"]) {
   if (status === "DONE") {
     return "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20";
   }
@@ -55,7 +66,7 @@ function getStatusClasses(status: Task["status"]) {
   return "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700";
 }
 
-function getPriorityClasses(priority: Task["priority"]) {
+function getPriorityClasses(priority: TaskItem["priority"]) {
   if (priority === "HIGH") {
     return "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/20";
   }
@@ -67,12 +78,12 @@ function getPriorityClasses(priority: Task["priority"]) {
   return "bg-slate-100 text-slate-700 ring-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700";
 }
 
-function isOverdue(task: Task) {
+function isOverdue(task: TaskItem) {
   if (!task.dueDate || task.status === "DONE") return false;
   return new Date(task.dueDate) < new Date();
 }
 
-function formatDate(date: Date | null) {
+function formatDate(date: string | Date | null) {
   if (!date) return "Not set";
   return new Date(date).toLocaleDateString();
 }
@@ -80,32 +91,18 @@ function formatDate(date: Date | null) {
 export default function TaskBoard({ userName, initialTasks }: TaskBoardProps) {
   const router = useRouter();
 
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<TaskItem[]>(initialTasks);
   const [form, setForm] = useState<TaskFormState>(defaultForm);
   const [loading, setLoading] = useState(false);
 
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TaskItem | null>(null);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "TODO" | "IN_PROGRESS" | "DONE">("ALL");
   const [priorityFilter, setPriorityFilter] = useState<"ALL" | "LOW" | "MEDIUM" | "HIGH">("ALL");
 
   const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("taskflow-theme");
-    const shouldDark = saved === "dark";
-    setDarkMode(shouldDark);
-    document.documentElement.classList.toggle("dark", shouldDark);
-  }, []);
-
-  function toggleDarkMode() {
-    const next = !darkMode;
-    setDarkMode(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("taskflow-theme", next ? "dark" : "light");
-  }
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -177,7 +174,7 @@ export default function TaskBoard({ userName, initialTasks }: TaskBoardProps) {
     }
   }
 
-  function openEditModal(task: Task) {
+  function openEditModal(task: TaskItem) {
     setEditingTask(task);
     setForm({
       title: task.title,
@@ -280,7 +277,12 @@ export default function TaskBoard({ userName, initialTasks }: TaskBoardProps) {
 
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={toggleDarkMode}
+              onClick={() => {
+                const next = !darkMode;
+                setDarkMode(next);
+                document.documentElement.classList.toggle("dark", next);
+                localStorage.setItem("taskflow-theme", next ? "dark" : "light");
+              }}
               className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-3 text-sm font-medium text-white ring-1 ring-white/15 transition hover:bg-white/15"
             >
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
@@ -374,79 +376,54 @@ export default function TaskBoard({ userName, initialTasks }: TaskBoardProps) {
           </div>
 
           <form onSubmit={handleCreate} className="space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Title
-              </label>
-              <input
-                name="title"
-                type="text"
-                placeholder="Ex: Finish dashboard redesign"
-                value={form.title}
-                onChange={handleChange}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
-              />
-            </div>
+            <input
+              name="title"
+              type="text"
+              placeholder="Ex: Finish dashboard redesign"
+              value={form.title}
+              onChange={handleChange}
+              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
+            />
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                Description
-              </label>
-              <textarea
-                name="description"
-                placeholder="Write task details..."
-                value={form.description}
-                onChange={handleChange}
-                rows={4}
-                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
-              />
-            </div>
+            <textarea
+              name="description"
+              placeholder="Write task details..."
+              value={form.description}
+              onChange={handleChange}
+              rows={4}
+              className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
+            />
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
-                >
-                  <option value="TODO">TODO</option>
-                  <option value="IN_PROGRESS">IN PROGRESS</option>
-                  <option value="DONE">DONE</option>
-                </select>
-              </div>
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
+              >
+                <option value="TODO">TODO</option>
+                <option value="IN_PROGRESS">IN PROGRESS</option>
+                <option value="DONE">DONE</option>
+              </select>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Priority
-                </label>
-                <select
-                  name="priority"
-                  value={form.priority}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
-                >
-                  <option value="LOW">LOW</option>
-                  <option value="MEDIUM">MEDIUM</option>
-                  <option value="HIGH">HIGH</option>
-                </select>
-              </div>
+              <select
+                name="priority"
+                value={form.priority}
+                onChange={handleChange}
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
+              >
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+              </select>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                  Due date
-                </label>
-                <input
-                  name="dueDate"
-                  type="date"
-                  value={form.dueDate}
-                  onChange={handleChange}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
-                />
-              </div>
+              <input
+                name="dueDate"
+                type="date"
+                value={form.dueDate}
+                onChange={handleChange}
+                className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:focus:border-slate-300"
+              />
             </div>
 
             <button
