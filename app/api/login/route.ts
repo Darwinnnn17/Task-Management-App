@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/src/lib/prisma";
 import { loginSchema } from "@/src/lib/validations";
 
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -68,7 +70,7 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
