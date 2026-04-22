@@ -4,6 +4,7 @@ import { prisma } from "@/src/lib/prisma";
 import { registerSchema } from "@/src/lib/validations";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {

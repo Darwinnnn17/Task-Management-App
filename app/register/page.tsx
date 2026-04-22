@@ -40,7 +40,7 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setMessage(data.error || data.details || "Register gagal");
+        setMessage(data.details || data.error || "Register gagal");
         setLoading(false);
         return;
       }

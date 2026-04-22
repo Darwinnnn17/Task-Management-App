@@ -38,11 +38,11 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        setMessage(data.error || data.details || "Login gagal");
-        setLoading(false);
-        return;
-      }
+        if (!res.ok) {
+          setMessage(data.details || data.error || "Login gagal");
+          setLoading(false);
+          return;
+        }
 
       setLoading(false);
       router.push("/dashboard");

@@ -10,14 +10,11 @@ if (!connectionString) {
 
 const pool = new Pool({
   connectionString,
-  ssl: {
-    rejectUnauthorized: false,
-  },
 });
 
 const adapter = new PrismaPg(pool);
 
-const globalForPrisma = globalThis as unknown as {
+const globalForPrisma = globalThis as {
   prisma?: PrismaClient;
 };
 
